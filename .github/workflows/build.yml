@@ -14,14 +14,25 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Unpack project
+        shell: bash
         run: |
           mkdir proj
           unzip -q project.zip -d proj
+          ls -la proj | head -30
       - name: Build
+        shell: bash
         working-directory: proj
         run: |
           chmod +x gradlew
-          ./gradlew build --no-daemon
+          set -o pipefail
+          ./gradlew build --no-daemon --console=plain --stacktrace 2>&1 | tee ../build-log.txt
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build-log.txt
+          if-no-files-found: warn
       - name: Upload jar
         uses: actions/upload-artifact@v4
         with:
